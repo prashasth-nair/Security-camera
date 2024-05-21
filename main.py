@@ -4,6 +4,10 @@ import sqlite3 # SQLite3 library to store the video files
 import keyboard # Keyboard library to detect the key press
 import os   # OS library to start the video file in the video player and remove the temp file
 
+# Create a directory to store the video files
+if not os.path.exists('recordings'): # Check if the directory does not exist
+    os.makedirs('recordings') # Create the directory
+
 # Connect to the database
 conn = sqlite3.connect('records.db') # Create a database file
 
@@ -42,7 +46,6 @@ data = c.execute("SELECT * FROM files").fetchall() # Get all the records from th
 unique_id = len(data) + 1 # Unique ID for the video file
    
 size = (frame_width, frame_height)  # Set the frame size
-
 
 def save_video(): # Function to save the video
     # Declare the global variables
