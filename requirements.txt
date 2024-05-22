@@ -1,3 +1,4 @@
 opencv-python
 keyboard
 pyqt5
+imutils

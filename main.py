@@ -26,26 +26,26 @@ c.execute('''CREATE TABLE IF NOT EXISTS files (
 # Commit the command
 conn.commit() # Commit the changes to the database
 
+os.system('cls') # Clear the command prompt
+
 print("------------------------------------------------------------")
 print("Welcome to the Security Camera System")
 print("Press 'r' to start recording")
 print("Press 's' to stop recording")
 print("Press 'q' to quit")
+print("Press 'p' to view the recordings")
+print("Press 'm' to start motion detection mode")
 print("------------------------------------------------------------")
 
 is_recording = False # Recording flag
 faceCascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml') # Load the face cascade
-video_capture = cv2.VideoCapture(0) # Start the video capture
-frame_width = int(video_capture.get(3))  # Get the frame width
-frame_height = int(video_capture.get(4))  # Get the frame height
+is_motion = False # Motion flag
 video_file = False # Video file flag
 is_saving = False # Saving flag
 
 data = c.execute("SELECT * FROM files").fetchall() # Get all the records from the database
 
 unique_id = len(data) + 1 # Unique ID for the video file
-   
-size = (frame_width, frame_height)  # Set the frame size
 
 def save_video(): # Function to save the video
     # Declare the global variables
@@ -81,10 +81,15 @@ def main():
     global is_recording
     global unique_id
     global result
+    global is_motion
+    video_capture = cv2.VideoCapture(0) # Start the video capture
+    frame_width = int(video_capture.get(3))  # Get the frame width
+    frame_height = int(video_capture.get(4))  # Get the frame height
+    size = (frame_width, frame_height)  # Set the frame size
 
     while True:
         # Capture frame-by-frame
-        frame = video_capture.read()  # Read the video capture
+        ret, frame = video_capture.read()  # Read the video capture
 
         # recording
         if keyboard.is_pressed('r') or is_recording:
@@ -98,7 +103,14 @@ def main():
 
         if is_recording:
             frame = cv2.circle(frame, (frame_width-60,50), 12, (0, 0, 255), -1) # Draw a red circle to indicate recording
-
+        
+        # Motion Detection: Press 'm' to start motion detection python file
+        if keyboard.is_pressed('m'):
+            # Clear cmd and stop the current file
+            os.system('cls')
+            is_motion = True
+            break
+            
         # stop recording
         if keyboard.is_pressed('s'):
             save_video()
@@ -134,7 +146,7 @@ def main():
 
         # NightVision
         current_time = datetime.datetime.now()
-        if current_time.hour >= 18 or current_time.hour <= 6: # Check if the current time is between 6 PM and 6 AM
+        if (current_time.hour >= 18 or current_time.hour <= 6): # Check if the current time is between 6 PM and 6 AM
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) # Convert the frame to grayscale
         
         faces = faceCascade.detectMultiScale(
@@ -162,6 +174,12 @@ def main():
     # When everything is done, release the capture
     video_capture.release() # Release the video capture
     cv2.destroyAllWindows() # Close the video window
+    
+    if is_motion:
+        is_motion = False
+        os.system('python motion_detect.py')
+    else:
+        print("Quitting the system..")
 
 if __name__ == "__main__":
     # try block to handle the KeyboardInterrupt exception when the user presses 'Ctrl+C'
