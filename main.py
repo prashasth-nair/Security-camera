@@ -45,6 +45,15 @@ is_saving = False # Saving flag
 
 data = c.execute("SELECT * FROM files").fetchall() # Get all the records from the database
 
+# Check date and delete records older than 14 days
+for record in data:
+    record_date = datetime.datetime.strptime(record[3], '%Y-%m-%d %H:%M:%S.%f') # Get the date of the record
+    current_date = datetime.datetime.now() # Get the current date
+    if (current_date - record_date).days > 14: # Check if the record is older than 14 days
+        c.execute("DELETE FROM files WHERE id = ?", (record[0],)) # Delete the record from the database
+        conn.commit() # Commit the changes to the database
+    
+
 unique_id = len(data) + 1 # Unique ID for the video file
 
 def save_video(): # Function to save the video
@@ -126,23 +135,29 @@ def main():
                 print(f"File Name: {record[1]}")
                 print(f"Date Time: {record[3]}")
                 print("------------------------------------------------------------")
+            if len(data) == 0:
+                record = None
+                print("No records found...")
+                print("------------------------------------------------------------")
+            
+            if record:
 
-            print("Enter the ID of the record you want to view or press 'q' to quit")
+                print("Enter the ID of the record you want to view or press 'q' to quit")
 
-            record_id = input("Enter the ID: ")
+                record_id = input("Enter the ID: ")
 
-            if record_id == 'q':
-                print("Quitting Database..")
-                continue
+                if record_id == 'q':
+                    print("Quitting Database..")
+                    continue
 
-            record = c.execute("SELECT * FROM files WHERE id = ?", (record_id,)).fetchone() # Get the record from the database using the ID
-            # Open the video file in video player
-            if record: # Check if the record exists
-                with open("temp.avi", 'wb') as output_file: # Open the temp file
-                    output_file.write(record[2])     # Write the record to the temp file
-                os.startfile('temp.avi') # Open the temp file in the video player
-            else:   # If the record does not exist
-                print("Record not found") # Print the message
+                record = c.execute("SELECT * FROM files WHERE id = ?", (record_id,)).fetchone() # Get the record from the database using the ID
+                # Open the video file in video player
+                if record: # Check if the record exists
+                    with open("temp.avi", 'wb') as output_file: # Open the temp file
+                        output_file.write(record[2])     # Write the record to the temp file
+                    os.startfile('temp.avi') # Open the temp file in the video player
+                else:   # If the record does not exist
+                    print("Record not found") # Print the message
 
         # NightVision
         current_time = datetime.datetime.now()
